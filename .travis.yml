@@ -1,0 +1,25 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t amitaucs/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run amitaucs/react-test npm test -- --coverage
+
+
+after_success:
+  - docker build -t amitaucs/multi-client ./client
+  - docker build -t amitaucs/multi-nginx ./nginx
+  - docker build -t amitaucs/multi-server ./server
+  - docker build -t amitaucs/multi-worker ./worker
+  # Login Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  # Take those images and push in docker hub
+  - docker push amitaucs/multi-client
+  - docker push amitaucs/multi-nginx
+  - docker push amitaucs/multi-server
+  - docker push amitaucs/multi-worker
+
